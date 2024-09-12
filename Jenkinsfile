@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-southeast-1'                // AWS region
-        ECR_REPO = 'mywebsite'                    // ECR repository name
+        AWS_REGION = 'ap-southeast-1'                  // AWS region
+        ECR_REPO = 'mywebsite'                        // ECR repository name
         IMAGE_TAG = 'latest'
-        CLUSTER_NAME = 'my-cluster'      // Your EKS cluster name
+        CLUSTER_NAME = 'my-cluster'                   // Your EKS cluster name
         ECR_URL = "626635410898.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
-        SONARQUBE_URL = 'http://54.169.131.59:9000' // URL of your SonarQube server
+        SONARQUBE_URL = 'http://54.169.131.59:9000'  // URL of your SonarQube server
         SONARQUBE_AUTH = credentials('sqa_50d0bc82c65db8e7df7c757cfe7ac59f5c257bbb') // SonarQube authentication token
     }
 
@@ -21,7 +21,7 @@ pipeline {
         stage('Code Analysis') {
             steps {
                 script {
-                    // Run SonarQube analysis
+                    // Ensure Maven is installed or replace with your build tool
                     sh '''
                     mvn sonar:sonar \
                         -Dsonar.host.url=${SONARQUBE_URL} \
@@ -34,6 +34,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Build the Docker image
                     sh 'docker build -t ${ECR_URL}:${IMAGE_TAG} .'
                 }
             }
@@ -42,6 +43,7 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 script {
+                    // Login to AWS ECR
                     sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URL}'
                 }
             }
@@ -50,6 +52,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
+                    // Push the Docker image to ECR
                     sh 'docker push ${ECR_URL}:${IMAGE_TAG}'
                 }
             }
@@ -70,7 +73,10 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            // Clean workspace after build
+            script {
+                cleanWs()
+            }
         }
     }
 }
